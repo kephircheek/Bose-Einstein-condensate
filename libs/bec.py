@@ -165,12 +165,9 @@ def vacuum_state(model):
     return qutip.tensor(*itertools.chain(4 * [qutip.fock(model.n_bosons + 1, 0)]))
 
 
-def coherent_state(model, alpha=1 / math.sqrt(2), beta=1 / math.sqrt(2)):
+def coherent_state_constructor(model, i, alpha=1 / math.sqrt(2), beta=1 / math.sqrt(2)):
     return (
         1
         / math.sqrt(math.factorial(model.n_bosons))
-        * (alpha * a(model, 0).dag() + beta * b(model, 0).dag()) ** model.n_bosons
-        / math.sqrt(math.factorial(model.n_bosons))
-        * (alpha * a(model, 1).dag() + beta * b(model, 1).dag()) ** model.n_bosons
-        * vacuum_state(model)
+        * (alpha * a(model, i).dag() + beta * b(model, i).dag()) ** model.n_bosons
     )
