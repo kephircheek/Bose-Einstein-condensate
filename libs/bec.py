@@ -126,52 +126,51 @@ class BEC_Qubits:
         )
 
 
-@dataclass(frozen=True)
-class H_eff_total:
-    model: BEC_Qubits
+def a(model, i):
+    dim = model.n_bosons + 1
+    identity = [qutip.identity(dim)] * 2
+    destroy = [qutip.destroy(dim), qutip.identity(dim)]
+    if i == 0:
+        return qutip.tensor(*(destroy + identity))
+    if i == 1:
+        return qutip.tensor(*(identity + destroy))
+    raise ValueError(f"only two qubits supported (0 or 1), not {i}")
 
-    def a(self, i):
-        dim = self.model.n_bosons + 1
-        identity = [qutip.identity(dim)] * 2
-        destroy = [qutip.destroy(dim), qutip.identity(dim)]
-        if i == 0:
-            return qutip.tensor(*(destroy + identity))
-        if i == 1:
-            return qutip.tensor(*(identity + destroy))
-        raise ValueError(f"only two qubits supported (0 or 1), not {i}")
 
-    def b(self, i):
-        dim = self.model.n_bosons + 1
-        identity = [qutip.identity(dim)] * 2
-        destroy = [qutip.identity(dim), qutip.destroy(dim)]
-        if i == 0:
-            return qutip.tensor(*(destroy + identity))
-        if i == 1:
-            return qutip.tensor(*(identity + destroy))
-        raise ValueError(f"only two qubits supported (0 or 1), not {i}")
+def b(model, i):
+    dim = model.n_bosons + 1
+    identity = [qutip.identity(dim)] * 2
+    destroy = [qutip.identity(dim), qutip.destroy(dim)]
+    if i == 0:
+        return qutip.tensor(*(destroy + identity))
+    if i == 1:
+        return qutip.tensor(*(identity + destroy))
+    raise ValueError(f"only two qubits supported (0 or 1), not {i}")
 
-    def sz(self, i):
-        return self.a(i).dag() * self.a(i) - self.b(i).dag() * self.b(i)
 
-    def __call__(self):
-        omega = (self.model.n_bosons + 2) * self.model.Omega * math.cos(
-            self.model.phase
-        ) - self.model.g**2 * self.model.omega0 / 4 / self.model.delta
-        d = self.model.Omega * math.cos(self.model.phase)
-        print(f"omega = {omega:.3e}; d = {d:.3e}")
-        return -d * self.sz(0) * self.sz(1) + omega * (self.sz(0) + self.sz(1))
+def sz(model, i):
+    return a(model, i).dag() * a(model, i) - b(model, i).dag() * b(model, i)
 
-    def vacuum_state(self):
-        return qutip.tensor(
-            *itertools.chain(4 * [qutip.fock(self.model.n_bosons + 1, 0)])
-        )
 
-    def coherent_state(self, alpha=1 / math.sqrt(2), beta=1 / math.sqrt(2)):
-        return (
-            1
-            / math.sqrt(math.factorial(self.model.n_bosons))
-            * (alpha * self.a(0).dag() + beta * self.b(0).dag()) ** self.model.n_bosons
-            / math.sqrt(math.factorial(self.model.n_bosons))
-            * (alpha * self.a(1).dag() + beta * self.b(1).dag()) ** self.model.n_bosons
-            * self.vacuum_state()
-        )
+def h_eff_total(model):
+    omega = (model.n_bosons + 2) * model.Omega * math.cos(
+        model.phase
+    ) - model.g**2 * model.omega0 / 4 / model.delta
+    d = model.Omega * math.cos(model.phase)
+    print(f"omega = {omega:.3e}; d = {d:.3e}")
+    return -d * sz(model, 0) * sz(model, 1) + omega * (sz(model, 0) + sz(model, 1))
+
+
+def vacuum_state(model):
+    return qutip.tensor(*itertools.chain(4 * [qutip.fock(model.n_bosons + 1, 0)]))
+
+
+def coherent_state(model, alpha=1 / math.sqrt(2), beta=1 / math.sqrt(2)):
+    return (
+        1
+        / math.sqrt(math.factorial(model.n_bosons))
+        * (alpha * a(model, 0).dag() + beta * b(model, 0).dag()) ** model.n_bosons
+        / math.sqrt(math.factorial(model.n_bosons))
+        * (alpha * a(model, 1).dag() + beta * b(model, 1).dag()) ** model.n_bosons
+        * vacuum_state(model)
+    )
