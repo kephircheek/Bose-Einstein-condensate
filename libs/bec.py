@@ -161,6 +161,10 @@ def h_eff_total(model):
     return -d * sz(model, 0) * sz(model, 1) + omega * (sz(model, 0) + sz(model, 1))
 
 
+def hzz(model):
+    return model.Omega * sz(model, 1) * sz(model, 2)
+
+
 def vacuum_state(model):
     return qutip.tensor(*itertools.chain(4 * [qutip.fock(model.n_bosons + 1, 0)]))
 
@@ -170,4 +174,15 @@ def coherent_state_constructor(model, i, alpha=1 / math.sqrt(2), beta=1 / math.s
         1
         / math.sqrt(math.factorial(model.n_bosons))
         * (alpha * a(model, i).dag() + beta * b(model, i).dag()) ** model.n_bosons
+    )
+
+
+def fock_state_constructor(model, i, k):
+    """Return operator to create `k`-th eigenstate of Sz,i (Fock states) for `i` qubit from vacuum state."""
+    norm = math.sqrt(math.factorial(k) * math.factorial(model.n_bosons - k))
+    return (
+        1
+        / norm
+        * a(model, i).dag() ** k
+        * b(model, i).dag() ** (model.n_bosons - k)
     )
