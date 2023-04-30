@@ -125,64 +125,102 @@ class BEC_Qubits:
             phase=phase,
         )
 
+    @property
+    def sublevels(self):
+        return 2  # Means only 'a' and 'b'
 
-def a(model, i):
+
+def _build_entire_space(qobj, n, k, m, i):
+    """
+    Parameters
+    ----------
+    n : int
+        Number of qubits.
+    k : int
+        Qubit number.
+    m : int
+        Number of qubit sublevels.
+    i : int
+        Sublevel number.
+    """
+    if k is None and n > 1:
+        raise NotImplementedError("n={n}; k={k}")
+
+    if k is None and n == 1:
+        k = 0
+
+    if k > (n - 1):
+        raise ValueError(
+            f"qubit number out of range {k} > {n - 1}. Counting starts with zero."
+        )
+
+    if i > (m - 1):
+        raise ValueError(
+            "sublevel number out of range {i} > {m - 1}. Counting starts with zero."
+        )
+
+    i_qobj_subspace = k * m + i
+    identity = qutip.identity(qobj.shape[0])
+    space = (
+        [identity] * i_qobj_subspace
+        + [qobj]
+        + [identity] * (n * m - i_qobj_subspace - 1)
+    )
+    return qutip.tensor(*space)
+
+
+def a(model, n=1, k=None):
     dim = model.n_bosons + 1
-    identity = [qutip.identity(dim)] * 2
-    destroy = [qutip.destroy(dim), qutip.identity(dim)]
-    if i == 0:
-        return qutip.tensor(*(destroy + identity))
-    if i == 1:
-        return qutip.tensor(*(identity + destroy))
-    raise ValueError(f"only two qubits supported (0 or 1), not {i}")
+    qobj = qutip.destroy(dim)
+    return _build_entire_space(qobj, n, k, m=model.sublevels, i=0)
 
 
-def b(model, i):
+def b(model, n=1, k=None):
     dim = model.n_bosons + 1
-    identity = [qutip.identity(dim)] * 2
-    destroy = [qutip.identity(dim), qutip.destroy(dim)]
-    if i == 0:
-        return qutip.tensor(*(destroy + identity))
-    if i == 1:
-        return qutip.tensor(*(identity + destroy))
-    raise ValueError(f"only two qubits supported (0 or 1), not {i}")
+    qobj = qutip.destroy(dim)
+    return _build_entire_space(qobj, n, k, m=model.sublevels, i=1)
 
 
-def sz(model, i):
-    return a(model, i).dag() * a(model, i) - b(model, i).dag() * b(model, i)
+def sz(model, n=1, k=None):
+    return a(model, n, k).dag() * a(model, n, k) - b(model, n, k).dag() * b(model, n, k)
 
 
-def h_eff_total(model):
+def h_eff_total(model, n=2):
+    if n != 2:
+        raise NotImplementedError("only qubit pair")
+
     omega = (model.n_bosons + 2) * model.Omega * math.cos(
         model.phase
     ) - model.g**2 * model.omega0 / 4 / model.delta
     d = model.Omega * math.cos(model.phase)
     print(f"omega = {omega:.3e}; d = {d:.3e}")
-    return -d * sz(model, 0) * sz(model, 1) + omega * (sz(model, 0) + sz(model, 1))
+    return -d * sz(model, n, 0) * sz(model, n, 1) + omega * (
+        sz(model, n, 0) + sz(model, n, 1)
+    )
 
 
-def hzz(model):
-    return model.Omega * sz(model, 1) * sz(model, 2)
+def hzz(model, n=2):
+    if n != 2:
+        raise NotImplementedError("only qubit pair")
+
+    return model.Omega * sz(model, n, 0) * sz(model, n, 1)
 
 
-def vacuum_state(model):
-    return qutip.tensor(*itertools.chain(4 * [qutip.fock(model.n_bosons + 1, 0)]))
+def vacuum_state(model, n=2):
+    return qutip.tensor(
+        *itertools.chain(n * model.sublevels * [qutip.fock(model.n_bosons + 1, 0)])
+    )
 
 
-def coherent_state_constructor(model, i, alpha=1 / math.sqrt(2), beta=1 / math.sqrt(2)):
+def coherent_state_constructor(model, n, k, alpha=1 / math.sqrt(2), beta=1 / math.sqrt(2)):
     return (
         1
         / math.sqrt(math.factorial(model.n_bosons))
-        * (alpha * a(model, i).dag() + beta * b(model, i).dag()) ** model.n_bosons
+        * (alpha * a(model, n, k).dag() + beta * b(model, n, k).dag()) ** model.n_bosons
     )
 
 
-def fock_state_constructor(model, i, k):
-    """Return operator to create `k`-th eigenstate of Sz,i (Fock states) for `i` qubit from vacuum state."""
-    norm = math.sqrt(math.factorial(k) * math.factorial(model.n_bosons - k))
-    return (
-        1
-        / norm
-        * a(model, i).dag() ** k
-        * b(model, i).dag() ** (model.n_bosons - k)
-    )
+def fock_state_constructor(model, n, k, i=0):
+    """Return operator to create `i`-th eigenstate of Sz,i (Fock states) for `k` qubit from vacuum state."""
+    norm = math.sqrt(math.factorial(i) * math.factorial(model.n_bosons - i))
+    return 1 / norm * a(model, n, k).dag() ** i * b(model, n, k).dag() ** (model.n_bosons - i)
