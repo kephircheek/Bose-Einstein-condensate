@@ -156,7 +156,7 @@ def _build_entire_space(qobj, n, k, m, i):
 
     if i > (m - 1):
         raise ValueError(
-            "sublevel number out of range {i} > {m - 1}. Counting starts with zero."
+            f"sublevel number out of range {i} > {m - 1}. Counting starts with zero."
         )
 
     i_qobj_subspace = k * m + i
@@ -169,16 +169,18 @@ def _build_entire_space(qobj, n, k, m, i):
     return qutip.tensor(*space)
 
 
+def _destroy(model, n, k, i):
+    return _build_entire_space(
+        qutip.destroy(model.n_bosons + 1), n, k, m=model.sublevels, i=i
+    )
+
+
 def a(model, n=1, k=None):
-    dim = model.n_bosons + 1
-    qobj = qutip.destroy(dim)
-    return _build_entire_space(qobj, n, k, m=model.sublevels, i=0)
+    return _destroy(model, n, k, i=0)
 
 
 def b(model, n=1, k=None):
-    dim = model.n_bosons + 1
-    qobj = qutip.destroy(dim)
-    return _build_entire_space(qobj, n, k, m=model.sublevels, i=1)
+    return _destroy(model, n, k, i=1)
 
 
 def sz(model, n=1, k=None):
@@ -212,7 +214,9 @@ def vacuum_state(model, n=2):
     )
 
 
-def coherent_state_constructor(model, n, k, alpha=1 / math.sqrt(2), beta=1 / math.sqrt(2)):
+def coherent_state_constructor(
+    model, n, k, alpha=1 / math.sqrt(2), beta=1 / math.sqrt(2)
+):
     return (
         1
         / math.sqrt(math.factorial(model.n_bosons))
@@ -223,4 +227,9 @@ def coherent_state_constructor(model, n, k, alpha=1 / math.sqrt(2), beta=1 / mat
 def fock_state_constructor(model, n, k, i=0):
     """Return operator to create `i`-th eigenstate of Sz,i (Fock states) for `k` qubit from vacuum state."""
     norm = math.sqrt(math.factorial(i) * math.factorial(model.n_bosons - i))
-    return 1 / norm * a(model, n, k).dag() ** i * b(model, n, k).dag() ** (model.n_bosons - i)
+    return (
+        1
+        / norm
+        * a(model, n, k).dag() ** i
+        * b(model, n, k).dag() ** (model.n_bosons - i)
+    )
