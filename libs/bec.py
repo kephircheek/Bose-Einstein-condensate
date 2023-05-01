@@ -184,7 +184,9 @@ def b(model, n=1, k=None):
 
 
 def sz(model, n=1, k=None):
-    return a(model, n, k).dag() * a(model, n, k) - b(model, n, k).dag() * b(model, n, k)
+    a_ = a(model, n, k)
+    b_ = b(model, n, k)
+    return a_.dag() * a_ - b_.dag() * b_
 
 
 def h_eff_total(model, n=2):
