@@ -39,6 +39,7 @@ class BEC_Qubits:
     transition_freq: float
     resonance_freq: float
     phase: float
+    excitation_level: bool = False
 
     @property
     def G(self):
@@ -77,6 +78,7 @@ class BEC_Qubits:
         single_coupling_strength=1.35e6,
         transition_freq=1e7,
         detuning_param: float = 1,
+        excitation_level=False,
     ):
         """
         See section '4. Estimated gate times' in [1] and [2] for details.
@@ -108,10 +110,11 @@ class BEC_Qubits:
             transition_freq=transition_freq,
             resonance_freq=resonance_freq,
             phase=phase,
+            excitation_level=excitation_level,
         )
 
     @classmethod
-    def init_default(cls, n_bosons, phase):
+    def init_default(cls, n_bosons, phase, excitation_level=False):
         coupling_strength = 1
         delta = 10
         transition_freq = 11
@@ -123,10 +126,13 @@ class BEC_Qubits:
             transition_freq=transition_freq,
             resonance_freq=resonance_freq,
             phase=phase,
+            excitation_level=excitation_level,
         )
 
     @property
     def sublevels(self):
+        if self.excitation_level:
+            return 3  # Means only 'a', 'b' and 'e'
         return 2  # Means only 'a' and 'b'
 
 
@@ -181,6 +187,10 @@ def a(model, n=1, k=None):
 
 def b(model, n=1, k=None):
     return _destroy(model, n, k, i=1)
+
+
+def e(model, n=1, k=None):
+    return _destroy(model, n, k, i=2)
 
 
 def sz(model, n=1, k=None):
