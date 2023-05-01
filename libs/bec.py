@@ -1,10 +1,10 @@
 import itertools
-import numpy as np
 import math
 from dataclasses import dataclass
 
-import qutip
 import matplotlib.pyplot as plt
+import numpy as np
+import qutip
 
 
 @dataclass(frozen=True)
