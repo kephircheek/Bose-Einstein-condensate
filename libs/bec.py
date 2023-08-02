@@ -9,6 +9,7 @@ References
 import itertools
 import math
 from dataclasses import dataclass
+from typing import Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -45,6 +46,7 @@ class BEC_Qubits:
     resonance_freq: float
     phase: float
     excitation_level: bool = False
+    communication_line: bool = False
 
     @property
     def G(self):
@@ -135,22 +137,28 @@ class BEC_Qubits:
             return 3  # Means only 'a', 'b' and 'e'
         return 2  # Means only 'a' and 'b'
 
+    @property
+    def communication_line_levels(self):
+        return 2
 
-def _build_entire_space(qobj, n, k, m, i):
+
+def _build_entire_space(operator, model, n, k, kind):
     """
     Parameters
     ----------
+    operator: callable
+    Target operator constructor
+    model: BEC_Qubits
+    Model
     n : int
-        Number of qubits.
+    Number of qubits.
     k : int
-        Qubit number.
-    m : int
-        Number of qubit sublevels.
-    i : int
-        Sublevel number.
+    Qubit number.
+    kind : int
+    Sublevel number.
     """
     if k is None and n > 1:
-        raise NotImplementedError("n={n}; k={k}")
+        raise NotImplementedError(f"n={n}; k={k}")
 
     if k is None and n == 1:
         k = 0
@@ -160,37 +168,66 @@ def _build_entire_space(qobj, n, k, m, i):
             f"qubit number out of range {k} > {n - 1}. Counting starts with zero."
         )
 
-    if i > (m - 1):
-        raise ValueError(
-            f"sublevel number out of range {i} > {m - 1}. Counting starts with zero."
+    if k > 1 or n > 2:
+        raise ValueError("only one or two qubits")
+
+    n_qubit_kinds = model.sublevels
+    qubit_1_spaces = [qutip.identity(model.n_bosons + 1)] * n_qubit_kinds
+    qubit_2_spaces = (
+        [qutip.identity(model.n_bosons + 1)] * n_qubit_kinds if n == 2 else []
+    )
+    communication_line_spaces = (
+        [qutip.identity(model.communication_line_levels)]
+        if model.communication_line
+        else []
+    )
+    if kind != "c":
+        kind_i = {"a": 0, "b": 1, "e": 2}[kind]
+        qubit_1_spaces = (
+            kind_i * [qutip.identity(model.n_bosons + 1)]
+            + [operator(model.n_bosons + 1)]
+            + (n_qubit_kinds - kind_i - 1) * [qutip.identity(model.n_bosons + 1)]
         )
+        if k == 1:
+            qubit_1_spaces, qubit_2_spaces = qubit_2_spaces, qubit_1_spaces
+    else:
+        communication_line_spaces = [operator(model.communication_line_levels)]
 
-    i_qobj_subspace = k * m + i
-    identity = qutip.identity(qobj.shape[0])
-    space = (
-        [identity] * i_qobj_subspace
-        + [qobj]
-        + [identity] * (n * m - i_qobj_subspace - 1)
-    )
-    return qutip.tensor(*space)
+    return qutip.tensor(*(qubit_1_spaces + communication_line_spaces + qubit_2_spaces))
 
 
-def _destroy(model, n, k, i):
-    return _build_entire_space(
-        qutip.destroy(model.n_bosons + 1), n, k, m=model.sublevels, i=i
-    )
+def _destroy(model: BEC_Qubits, n, k, kind: Literal["a", "b", "e", "c"]):
+    """
+    Create `k`-th destroy operator of `kind` in full model space of `n` particles.
+    Indexing starts from zero.
+
+    Examples:
+        >>> _destory(model, n=2, k=0, 'a')  # a_1
+        >>> _destory(model, n=2, k=0, 'b')  # b_2
+    """
+    return _build_entire_space(qutip.destroy, model, n, k, kind=kind)
 
 
 def a(model, n=1, k=None):
-    return _destroy(model, n, k, i=0)
+    return _destroy(model, n, k, kind="a")
 
 
 def b(model, n=1, k=None):
-    return _destroy(model, n, k, i=1)
+    return _destroy(model, n, k, kind="b")
 
 
 def e(model, n=1, k=None):
-    return _destroy(model, n, k, i=2)
+    if model.excitation_level is False:
+        raise ValueError("no excitation state in model")
+    return _destroy(model, n, k, kind="e")
+
+
+def c(model, n=1, k=None):
+    if k is not None and k != 0:
+        raise NotImplementedError("only for single communication line")
+    if model.communication_line is False:
+        raise ValueError("no communication line in model")
+    return _destroy(model, n, k, kind="c")
 
 
 def sz(model, n=1, k=None):
@@ -222,7 +259,15 @@ def hzz(model, n=2):
 
 def vacuum_state(model, n=2):
     return qutip.tensor(
-        *itertools.chain(n * model.sublevels * [qutip.fock(model.n_bosons + 1, 0)])
+        *(
+            model.sublevels * [qutip.fock(model.n_bosons + 1, 0)]
+            + (
+                [qutip.fock(model.communication_line_levels, 0)]
+                if model.communication_line
+                else []
+            )
+            + (n - 1) * model.sublevels * [qutip.fock(model.n_bosons + 1, 0)]
+        )
     )
 
 
