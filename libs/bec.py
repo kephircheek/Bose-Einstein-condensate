@@ -1,3 +1,11 @@
+"""
+
+References
+
+1. Alexey N Pyrkov and Tim Byrnes. New J. Phys. 15 093019 (2013)
+2. Colombe Y et al. Nature 450, 272 (2007)
+3. Daniel Rosseau Qianqian Ha and Tim Byrnes, Phys.Rev.A 90, 052315 (2014)
+"""
 import itertools
 import math
 from dataclasses import dataclass
@@ -28,9 +36,6 @@ class BEC_Qubits:
     phase: float
         Phase due to propagation of the field through the fiber.
 
-    References
-    ----------
-    1. See 'Alexey N Pyrkov and Tim Byrnes. New J. Phys. 15 093019 (2013)'
     """
 
     n_bosons: float
@@ -81,7 +86,7 @@ class BEC_Qubits:
         excitation_level=False,
     ):
         """
-        See section '4. Estimated gate times' in [1] and [2] for details.
+        See Sec. '4. Estimated gate times' in [1] and [2] for details.
 
         Parameters
         ----------
@@ -92,11 +97,6 @@ class BEC_Qubits:
             Single atom cavity coupling strength
         d :
             Dimensionless detuning parameter.
-
-        References
-        ----------
-        1. Alexey N Pyrkov and Tim Byrnes. New J. Phys. 15 093019 (2013)
-        2. Colombe Y et al. Nature 450, 272 (2007)
         """
 
         coupling_strength = math.sqrt(n_bosons) * single_coupling_strength
