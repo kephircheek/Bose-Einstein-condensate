@@ -257,6 +257,48 @@ def hzz(model, n=2):
     return model.Omega * sz(model, n, 0) * sz(model, n, 1)
 
 
+def h_int(model, n=2, true_hc=False):
+    """The interaction Hamiltonian combined from H_CQED and H_f. See eq. (5) in [1]."""
+    if n != 2:
+        raise NotImplementedError("only qubit pair")
+
+    return (
+        model.G
+        / np.sqrt(2)
+        * (
+            e(model, n=n, k=0).dag() * b(model, n=n, k=0) * c(model, n=n, k=0)
+            - np.exp(1j * model.phase)
+            * e(model, n=n, k=1).dag()
+            * b(model, n=n, k=1)
+            * c(model, n=n, k=0)
+            # true hermitian conjugate
+            + (
+                c(model, n=n, k=0).dag() * b(model, n=n, k=0).dag() * e(model, n=n, k=0)
+                - np.exp(1j * model.phase)
+                * c(model, n=n, k=0).dag()
+                * b(model, n=n, k=1).dag()
+                * e(model, n=n, k=1)
+            )
+            if true_hc
+            else
+            # seems like not hermitian conjugate (follow to Eq. 3 in Rosseau2014)
+            (
+                b(model, n=n, k=0).dag() * e(model, n=n, k=0) * c(model, n=n, k=0).dag()
+                - np.exp(1j * model.phase)
+                * b(model, n=n, k=1).dag()
+                * e(model, n=n, k=1)
+                * c(model, n=n, k=0).dag()
+            )
+        )
+        + model.omega0
+        * (
+            e(model, n=n, k=0).dag() * e(model, n=n, k=0)
+            + e(model, n=n, k=1).dag() * e(model, n=n, k=1)
+        )
+        + model.omega * c(model, n=n, k=0).dag() * c(model, n=n, k=0)
+    )
+
+
 def vacuum_state(model, n=2):
     return qutip.tensor(
         *(
