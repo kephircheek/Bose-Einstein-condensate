@@ -316,27 +316,22 @@ def h_int(model, n=2, true_hc=False):
 
 def hamiltonian_coupling(model, n=2):
     """Return Hamiltonian coupling the BECs to the common mode. See Eq. (3) in [3]."""
-    delta_c = model.omega
-    return delta_c * (
-        c(model, n=n, k=0).dag() * c(model, n=n, k=0)
-        + model.G
-        * (
-            e(model, n=n, k=0).dag() * b(model, n=n, k=0) * c(model, n=n, k=0)
-            - e(model, n=n, k=1).dag() * b(model, n=n, k=1) * c(model, n=n, k=0)
-            # is seems is not Hermitian conjugate
-            + b(model, n=n, k=0).dag() * e(model, n=n, k=0) * c(model, n=n, k=0).dag()
-            - b(model, n=n, k=1).dag() * e(model, n=n, k=1) * c(model, n=n, k=0).dag()
-        )
+    delta_c = model.delta
+    return delta_c * (c(model, n=n, k=0).dag() * c(model, n=n, k=0)) + model.G * (
+        e(model, n=n, k=0).dag() * b(model, n=n, k=0) * c(model, n=n, k=0)
+        + e(model, n=n, k=1).dag() * b(model, n=n, k=1) * c(model, n=n, k=0)
+        + b(model, n=n, k=0).dag() * e(model, n=n, k=0) * c(model, n=n, k=0).dag()
+        + b(model, n=n, k=1).dag() * e(model, n=n, k=1) * c(model, n=n, k=0).dag()
     )
 
 
 def hamiltonian_laser_field(model, n=2):
     """Return Hamiltonian of controllable laser field. See Eq. (4) in [3]."""
-    delta_l = model.omega0
+    delta_l = model.delta
     return model.g * (
         e(model, n=n, k=0).dag() * b(model, n=n, k=0)
-        + b(model, n=n, k=0).dag() * e(model, n=n, k=0)
         + e(model, n=n, k=1).dag() * b(model, n=n, k=1)
+        + b(model, n=n, k=0).dag() * e(model, n=n, k=0)
         + b(model, n=n, k=1).dag() * e(model, n=n, k=1)
     )
     +model.delta_l * (
