@@ -8,6 +8,7 @@ References
 """
 import itertools
 import math
+import warnings
 from dataclasses import dataclass
 from typing import Literal
 
@@ -50,10 +51,12 @@ class BEC_Qubits:
 
     @property
     def G(self):
+        "Atom-cavity mode coupling"
         return self.coupling_strength
 
     @property
     def g(self):
+        "Laser coupling"
         return self.transition_ampl
 
     @property
@@ -76,6 +79,17 @@ class BEC_Qubits:
     def delta(self):
         """Detuning between the transition to the excited state and the cavity photon resonance."""
         return self.transition_freq - self.resonance_freq
+
+    @property
+    def delta_l(self):
+        """Detuning between the laser transition and the b <-> e transition. See [3]."""
+        warnings.warn("Means \delta_l = \delta_c = \delta")
+        return self.delta
+
+    @property
+    def delta_c(self):
+        """Detuning between the cavity and the b <-> e transition. See [3]."""
+        return self.delta
 
     @classmethod
     def init_alexey2003(
