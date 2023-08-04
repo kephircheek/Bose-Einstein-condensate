@@ -265,6 +265,28 @@ def h_eff_total(model, n=2):
     )
 
 
+def hamiltonian_eff(model, n=2, zeeman=True, quadratic=True):
+    """Return effective Hamiltonian. See (6) in [3]."""
+    if n != 2:
+        raise NotImplementedError("only qubit pair")
+
+    ham = 0
+    zz = -model.Omega * (sz(model, n=n, k=0) * sz(model, n=n, k=1))
+    ham += zz
+
+    if quadratic:
+        ham += -model.Omega * (
+            sz(model, n=n, k=0) * sz(model, n=n, k=0)
+            + sz(model, n=n, k=1) * sz(model, n=n, k=1)
+        )
+
+    if zeeman:
+        omega_ = model.g**2 / 2 / model.delta_l + model.Omega * model.n_bosons / 2
+        ham += omega_ * (sz(model, n=n, k=0) + sz(model, n=n, k=1))
+
+    return ham
+
+
 def hzz(model, n=2):
     if n != 2:
         raise NotImplementedError("only qubit pair")
