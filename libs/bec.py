@@ -251,6 +251,7 @@ def sz(model, n=1, k=None):
 
 
 def h_eff_total(model, n=2):
+    """Return total effective Hamiltonian. See (13) in [1]"""
     if n != 2:
         raise NotImplementedError("only qubit pair")
 
