@@ -289,7 +289,7 @@ def h_int(model, n=2, true_hc=False):
             # true hermitian conjugate
             + (
                 c(model, n=n, k=0).dag() * b(model, n=n, k=0).dag() * e(model, n=n, k=0)
-                - np.exp(1j * model.phase)
+                - np.exp(-1j * model.phase)
                 * c(model, n=n, k=0).dag()
                 * b(model, n=n, k=1).dag()
                 * e(model, n=n, k=1)
