@@ -308,6 +308,39 @@ def hzz(model, n=2):
     return model.Omega * sz(model, n, 0) * sz(model, n, 1)
 
 
+def h_int_approx(model, n=2):
+    """The approx of interaction Hamiltonian from Alexey handwriting notes. See last line in page 5."""
+    if model.phi != 0:
+        raise ValueError(f"hardcoded for \phi = 0, not {model.phi}")
+
+    if n != 2:
+        raise ValueError(f"hardcoded for n = 2, not {n}")
+
+    return (
+        model.G**2
+        / model.delta_c
+        * (
+            e(model, n=2, k=1)
+            * e(model, n=2, k=0).dag()
+            * b(model, n=2, k=0)
+            * b(model, n=2, k=1).dag()
+            + b(model, n=2, k=1)
+            * b(model, n=2, k=0).dag()
+            * e(model, n=2, k=0)
+            * e(model, n=2, k=1).dag()
+        )
+        + model.delta_l
+        * (
+            e(model, n=2, k=0).dag() * e(model, n=2, k=0)
+            + e(model, n=2, k=1).dag() * e(model, n=2, k=1)
+        )
+        # since there are many cases delta_c = delta_l it almost always is zero
+        + (model.delta_l - model.delta_c)
+        * c(model, n=2, k=0).dag()
+        * c(model, n=2, k=0)
+    )
+
+
 def h_int(model, n=2, true_hc=False):
     """The interaction Hamiltonian combined from H_CQED and H_f. See eq. (5) in [1]."""
     if n != 2:
