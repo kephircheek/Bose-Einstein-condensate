@@ -265,6 +265,38 @@ def h_eff_total(model, n=2):
     )
 
 
+def h_eff_edition3(model, n=2):
+    """Return effective Hamiltonian. See 3 edition of H_eff in page 6 of Alexey notes."""
+    if n != 2:
+        raise NotImplementedError("only qubit pair")
+
+    return (
+        (
+            model.G**2
+            * model.g**2
+            / model.delta_c
+            / model.delta_l**2
+            * 2
+            * np.cos(model.phase)
+            * b(model, n=n, k=0).dag()
+            * b(model, n=n, k=0)
+            * b(model, n=n, k=1).dag()
+            * b(model, n=n, k=1)
+        )
+        + (
+            model.g**2
+            / model.delta_l
+            * (
+                1
+                + 2 * model.G**2 / model.delta_c / model.delta_l * np.cos(model.phase)
+            )
+            * b(model, n=n, k=0).dag()
+            * b(model, n=n, k=0)
+        )
+        + (model.g**2 / model.delta_l * b(model, n=2, k=1).dag() * b(model, n=2, k=1))
+    )
+
+
 def hamiltonian_eff(model, n=2, zeeman=True, quadratic=True):
     """Return effective Hamiltonian. See (6) in [3]."""
     if n != 2:
