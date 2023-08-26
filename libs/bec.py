@@ -265,6 +265,28 @@ def h_eff_total(model, n=2):
     )
 
 
+def h_eff_eq9(model, n=2):
+    """Return effective Hamiltonian edition  See (9) in [1]"""
+    if n != 2:
+        raise NotImplementedError("only qubit pair")
+    zz_const = -model.Omega * np.cos(model.phase)
+    z_squared_const = model.Omega / 2
+    z_const = (
+        model.Omega
+        * (model.n_bosons * (np.cos(model.phase) - 1) + 2 * np.cos(model.phi))
+        - model.g**2 * model.omega0 / model.delta / 2
+    )
+    return (
+        zz_const * sz(model, n=n, k=0) * sz(model, n=n, k=1)
+        + z_squared_const
+        * (
+            sz(model, n=n, k=0) * sz(model, n=n, k=0)
+            + sz(model, n=n, k=1) * sz(model, n=n, k=1)
+        )
+        + z_const * (sz(model, n=n, k=0) + sz(model, n=n, k=1))
+    )
+
+
 def h_eff_edition3(model, n=2):
     """Return effective Hamiltonian. See 3 edition of H_eff in page 6 of Alexey notes."""
     if n != 2:
