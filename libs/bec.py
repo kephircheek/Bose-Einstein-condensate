@@ -287,6 +287,36 @@ def h_eff_eq9(model, n=2):
     )
 
 
+def h_eff_edition1(model, n=2):
+    """Return effective Hamiltonian. See 1 edition of H_eff in page 6 of Alexey notes."""
+    if n != 2:
+        raise NotImplementedError("only qubit pair")
+
+    p1 = (
+        model.G**2
+        * model.g**2
+        / model.delta_c
+        / model.delta_l**2
+        * 2
+        * np.cos(model.phi)
+        * b(model, n=n, k=0).dag()
+        * b(model, n=n, k=1)
+        * b(model, n=n, k=1).dag()
+        * b(model, n=n, k=0)
+    )
+
+    p2 = (
+        model.g**2
+        / model.delta_l
+        * (
+            b(model, n=n, k=0).dag() * b(model, n=n, k=0)
+            + b(model, n=n, k=1).dag() * b(model, n=n, k=1)
+        )
+    )
+
+    return p1 + p2
+
+
 def h_eff_edition3(model, n=2):
     """Return effective Hamiltonian. See 3 edition of H_eff in page 6 of Alexey notes."""
     if n != 2:
