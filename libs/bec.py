@@ -469,7 +469,7 @@ def h_int(model, n=2, true_hc=False):
 
 def hamiltonian_coupling(model, n=2):
     """Return Hamiltonian coupling the BECs to the common mode. See Eq. (3) in [3]."""
-    delta_c = model.delta
+    delta_c = model.delta_c
     return delta_c * (c(model, n=n, k=0).dag() * c(model, n=n, k=0)) + model.G * (
         e(model, n=n, k=0).dag() * b(model, n=n, k=0) * c(model, n=n, k=0)
         + e(model, n=n, k=1).dag() * b(model, n=n, k=1) * c(model, n=n, k=0)
@@ -480,7 +480,7 @@ def hamiltonian_coupling(model, n=2):
 
 def hamiltonian_laser_field(model, n=2):
     """Return Hamiltonian of controllable laser field. See Eq. (4) in [3]."""
-    delta_l = model.delta
+    delta_l = model.delta_l
     return model.g * (
         e(model, n=n, k=0).dag() * b(model, n=n, k=0)
         + e(model, n=n, k=1).dag() * b(model, n=n, k=1)
