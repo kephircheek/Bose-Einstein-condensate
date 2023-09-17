@@ -404,13 +404,13 @@ def h_int_approx(model, n=2):
         model.G**2
         / model.delta_c
         * (
-            e(model, n=2, k=1)
+            b(model, n=2, k=0)
             * e(model, n=2, k=0).dag()
-            * b(model, n=2, k=0)
             * b(model, n=2, k=1).dag()
-            + b(model, n=2, k=1)
-            * b(model, n=2, k=0).dag()
+            * e(model, n=2, k=1)
+            + b(model, n=2, k=0).dag()
             * e(model, n=2, k=0)
+            * b(model, n=2, k=1)
             * e(model, n=2, k=1).dag()
         )
         + model.delta_l
