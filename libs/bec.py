@@ -527,3 +527,27 @@ def fock_state_constructor(model, n, k, i=0):
         * a(model, n, k).dag() ** i
         * b(model, n, k).dag() ** (model.n_bosons - i)
     )
+
+
+def state_under_h_zz_teor(model, t):
+    """
+    Return theoretical evolution state of two BEC qubits under h_zz with superposition initial state.
+
+    See [1].
+    """
+
+    def alpha(k, t):
+        return np.exp(1j * (model.n_bosons - 2 * k) * model.Omega * t) / math.sqrt(2)
+
+    def beta(k, t):
+        return alpha(k, t).conjugate()
+
+    return sum(
+        (
+            math.sqrt(math.comb(model.n_bosons, k))
+            * coherent_state_constructor(model, 2, 0, alpha(k, t), beta(k, t))
+            * fock_state_constructor(model, 2, 1, k)
+            * vacuum_state(model)
+        )
+        for k in range(model.n_bosons + 1)
+    ) / math.sqrt(2**model.n_bosons)
