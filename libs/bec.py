@@ -250,6 +250,18 @@ def sz(model, n=1, k=None):
     return a_.dag() * a_ - b_.dag() * b_
 
 
+def sx(model, n=1, k=None):
+    a_ = a(model, n, k)
+    b_ = b(model, n, k)
+    return a_.dag() * b_ + b_.dag() * a_
+
+
+def sy(model, n=1, k=None):
+    a_ = a(model, n, k)
+    b_ = b(model, n, k)
+    return 1j * (b_.dag() * a_ - a_.dag() * b_)
+
+
 def h_eff_total(model, n=2):
     """Return total effective Hamiltonian. See (13) in [1]"""
     if n != 2:
