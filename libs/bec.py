@@ -12,7 +12,6 @@ import warnings
 from dataclasses import dataclass
 from typing import Literal
 
-import matplotlib.pyplot as plt
 import numpy as np
 import qutip
 
