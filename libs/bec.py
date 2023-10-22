@@ -517,8 +517,8 @@ def coherent_state_constructor(
     )
 
 
-def fock_state_constructor(model, n, k, i=0):
-    """Return operator to create `i`-th eigenstate of Sz,i (Fock states) for `k` qubit from vacuum state."""
+def fock_state_constructor(model, n, i, k=0):
+    """Return operator to create `k`-th eigenstate of Sz,i (Fock states) for `i`-th qubit of `n` qubits from vacuum state."""
     norm = math.sqrt(math.factorial(i) * math.factorial(model.n_bosons - i))
     return (
         1
