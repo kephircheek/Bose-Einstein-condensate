@@ -181,14 +181,11 @@ def _build_entire_space(operator, model, n, k, kind):
             f"qubit number out of range {k} > {n - 1}. Counting starts with zero."
         )
 
-    if k > 1 or n > 2:
-        raise ValueError("only one or two qubits")
+    if (k > 1 or n > 2) and model.communication_line:
+        raise ValueError("only one or two qubits for communication_line")
 
     n_qubit_kinds = model.sublevels
-    qubit_1_spaces = [qutip.identity(model.n_bosons + 1)] * n_qubit_kinds
-    qubit_2_spaces = (
-        [qutip.identity(model.n_bosons + 1)] * n_qubit_kinds if n == 2 else []
-    )
+    qubits_spaces = [[qutip.identity(model.n_bosons + 1)] * n_qubit_kinds] * n
     communication_line_spaces = (
         [qutip.identity(model.communication_line_levels)]
         if model.communication_line
@@ -196,17 +193,21 @@ def _build_entire_space(operator, model, n, k, kind):
     )
     if kind != "c":
         kind_i = {"a": 0, "b": 1, "e": 2}[kind]
-        qubit_1_spaces = (
+        qubit_spaces = (
             kind_i * [qutip.identity(model.n_bosons + 1)]
             + [operator(model.n_bosons + 1)]
             + (n_qubit_kinds - kind_i - 1) * [qutip.identity(model.n_bosons + 1)]
         )
-        if k == 1:
-            qubit_1_spaces, qubit_2_spaces = qubit_2_spaces, qubit_1_spaces
+        qubits_spaces[k] = qubit_spaces
     else:
         communication_line_spaces = [operator(model.communication_line_levels)]
 
-    return qutip.tensor(*(qubit_1_spaces + communication_line_spaces + qubit_2_spaces))
+    return qutip.tensor(
+        *(
+            qubits_spaces[0]
+            + sum((communication_line_spaces + qs for qs in qubits_spaces[1:]), [])
+        )
+    )
 
 
 def _destroy(model: BEC_Qubits, n, k, kind: Literal["a", "b", "e", "c"]):
