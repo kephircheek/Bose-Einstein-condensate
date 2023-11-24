@@ -529,6 +529,17 @@ def fock_state_constructor(model, n, i, k=0):
     )
 
 
+def fock_x_state_constructor(model, n, i, k=0):
+    """Return operator to create `k`-th eigenstate of Sx,i (Fock states in X basis) for `i`-th qubit of `n` qubits from vacuum state."""
+    norm = math.sqrt(math.factorial(k) * math.factorial(model.n_bosons - k))
+    return (
+        1
+        / norm
+        * (a(model, n, i).dag() + b(model, n, i).dag()) ** k
+        * (a(model, n, i).dag() - b(model, n, i).dag()) ** (model.n_bosons - k)
+    )
+
+
 def state_under_h_zz_teor(model, t):
     """
     Return theoretical evolution state of two BEC qubits under h_zz with superposition initial state.
