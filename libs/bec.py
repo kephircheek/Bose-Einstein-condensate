@@ -518,6 +518,21 @@ def coherent_state_constructor(
     )
 
 
+def epr_plus_state_constructor(model, n=2):
+    if n != 2:
+        raise ValueError("wrong number of qubits: {n} != 2")
+
+    norm = math.sqrt(model.n_bosons + 1)
+    return (
+        sum(
+            fock_state_constructor(model, n, i=0, k=k)
+            * fock_state_constructor(model, n, i=1, k=k)
+            for k in range(model.n_bosons + 1)
+        )
+        / norm
+    )
+
+
 def fock_state_constructor(model, n, i, k=0):
     """Return operator to create `k`-th eigenstate of Sz,i (Fock states) for `i`-th qubit of `n` qubits from vacuum state."""
     norm = math.sqrt(math.factorial(k) * math.factorial(model.n_bosons - k))
