@@ -577,3 +577,64 @@ def state_under_h_zz_teor(model, t):
         )
         for k in range(model.n_bosons + 1)
     ) / math.sqrt(2**model.n_bosons)
+
+
+def coherent_state_focked(model, alpha=None, beta=None):
+    alpha = 1 / math.sqrt(2) if alpha is None else alpha
+    beta = 1 / math.sqrt(2) if beta is None else beta
+    return sum(
+        math.sqrt(math.comb(model.n_bosons, k))
+        * alpha**k
+        * beta ** (model.n_bosons - k)
+        * qutip.fock(model.n_bosons + 1, k)
+        for k in range(model.n_bosons + 1)
+    )
+
+
+def fock_state_focked(model, n, i, k=0):
+    return qutip.tensor(
+        *[
+            [qutip.identity(model.n_bosons + 1)] * i
+            + [qutip.fock(model.n_bosons + 1, k)]
+            + [qutip.identity(model.n_bosons + 1)] * (n - i - 1)
+        ]
+    )
+
+
+def state_under_h_zz_teor_focked(model, t):
+    def alpha(k, t):
+        return np.exp(1j * (model.n_bosons - 2 * k) * model.Omega * t) / math.sqrt(2)
+
+    def beta(k, t):
+        return alpha(k, t).conjugate()
+
+    return sum(
+        (
+            math.sqrt(math.comb(model.n_bosons, k))
+            * qutip.tensor(
+                coherent_state_focked(model, alpha(k, t), beta(k, t)),
+                qutip.fock(model.n_bosons + 1, k),
+            )
+        )
+        for k in range(model.n_bosons + 1)
+    ) / math.sqrt(2**model.n_bosons)
+
+
+def state_under_h_zz_reduced_teor_focked(model, t):
+    def alpha(k, t):
+        return np.exp(1j * (model.n_bosons - 2 * k) * model.Omega * t) / math.sqrt(2)
+
+    def beta(k, t):
+        return alpha(k, t).conjugate()
+
+    return (
+        sum(
+            (
+                math.comb(model.n_bosons, k)
+                * (v := coherent_state_focked(model, alpha(k, t), beta(k, t)))
+                * v.dag()
+            )
+            for k in range(model.n_bosons + 1)
+        )
+        / 2**model.n_bosons
+    )
