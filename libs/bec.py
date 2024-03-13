@@ -244,6 +244,10 @@ def c(model, n=1, k=None):
     return _destroy(model, n, k, kind="c")
 
 
+def na(model, n=1, k=None):
+    a_ = a(model, n, k)
+    return a_.dag() * a_
+
 def sz(model, n=1, k=None):
     a_ = a(model, n, k)
     b_ = b(model, n, k)
