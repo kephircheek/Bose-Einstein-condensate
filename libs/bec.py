@@ -248,6 +248,7 @@ def na(model, n=1, k=None):
     a_ = a(model, n, k)
     return a_.dag() * a_
 
+
 def sz(model, n=1, k=None):
     a_ = a(model, n, k)
     b_ = b(model, n, k)
@@ -642,3 +643,18 @@ def state_under_h_zz_reduced_teor_focked(model, t):
         )
         / 2**model.n_bosons
     )
+
+
+def state_under_h_na_exact_focked(model, t):
+    return sum(
+        (
+            math.sqrt(math.comb(model.n_bosons, k))
+            * qutip.tensor(
+                qutip.fock(model.n_bosons + 1, k),
+                coherent_state_focked(
+                    model, np.exp(1j * k * t) / math.sqrt(2), 1 / math.sqrt(2)
+                ),
+            )
+        )
+        for k in range(model.n_bosons + 1)
+    ) / math.sqrt(2**model.n_bosons)
