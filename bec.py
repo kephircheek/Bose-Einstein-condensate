@@ -47,6 +47,7 @@ class BEC_Qubits:
     phase: float
     excitation_level: bool = False
     communication_line: bool = False
+    communication_line_levels: int = 0
 
     @property
     def G(self):
@@ -149,10 +150,6 @@ class BEC_Qubits:
         if self.excitation_level:
             return 3  # Means only 'a', 'b' and 'e'
         return 2  # Means only 'a' and 'b'
-
-    @property
-    def communication_line_levels(self):
-        return 2
 
 
 def _build_entire_space(operator, model, n, k, kind):
