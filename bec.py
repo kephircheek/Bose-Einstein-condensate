@@ -147,9 +147,7 @@ class BEC_Qubits:
 
     @property
     def sublevels(self):
-        if self.excitation_level:
-            return 3  # Means only 'a', 'b' and 'e'
-        return 2  # Means only 'a' and 'b'
+        return 2 + int(self.excitation_level) + int(self.communication_line)
 
 
 def _build_entire_space(operator, model, n, k, kind):
@@ -181,30 +179,38 @@ def _build_entire_space(operator, model, n, k, kind):
     if (k > 1 or n > 2) and model.communication_line:
         raise ValueError("only one or two qubits for communication_line")
 
-    n_qubit_kinds = model.sublevels
-    qubits_spaces = [[qutip.identity(model.n_bosons + 1)] * n_qubit_kinds] * n
-    communication_line_spaces = (
-        [qutip.identity(model.communication_line_levels)]
-        if model.communication_line
-        else []
-    )
-    if kind != "c":
-        kind_i = {"a": 0, "b": 1, "e": 2}[kind]
-        qubit_spaces = (
-            kind_i * [qutip.identity(model.n_bosons + 1)]
-            + [operator(model.n_bosons + 1)]
-            + (n_qubit_kinds - kind_i - 1) * [qutip.identity(model.n_bosons + 1)]
-        )
-        qubits_spaces[k] = qubit_spaces
-    else:
-        communication_line_spaces = [operator(model.communication_line_levels)]
+    levels = model.n_bosons + 1
+    if kind == "c":
+        levels = model.communication_line_levels
+    from collections import OrderedDict
 
-    return qutip.tensor(
-        *(
-            qubits_spaces[0]
-            + sum((communication_line_spaces + qs for qs in qubits_spaces[1:]), [])
+    kind_numbers = OrderedDict(
+        (
+            ("a", 0),
+            ("b", 1),
+            ("e", 2 if model.excitation_level else None),
+            (
+                "c",
+                (2 + int(model.excitation_level)) if model.communication_line else None,
+            ),
         )
     )
+    kind_i = kind_numbers[kind]
+    n_qubit_kinds = model.sublevels
+    qubits_spaces = [
+        [
+            (
+                qutip.identity(model.n_bosons + 1)
+                if kind != "c"
+                else qutip.identity(model.communication_line_levels)
+            )
+            for kind, i in kind_numbers.items()
+            if i is not None
+        ]
+        for _ in range(n)
+    ]
+    qubits_spaces[k][kind_i] = operator(levels)
+    return qutip.tensor(*sum(qubits_spaces, []))
 
 
 def _destroy(model: BEC_Qubits, n, k, kind: Literal["a", "b", "e", "c"]):
@@ -234,8 +240,6 @@ def e(model, n=1, k=None):
 
 
 def c(model, n=1, k=None):
-    if k is not None and k != 0:
-        raise NotImplementedError("only for single communication line")
     if model.communication_line is False:
         raise ValueError("no communication line in model")
     return _destroy(model, n, k, kind="c")
@@ -498,15 +502,16 @@ def hamiltonian_laser_field(model, n=2):
 
 def vacuum_state(model, n=2):
     return qutip.tensor(
-        *(
-            model.sublevels * [qutip.fock(model.n_bosons + 1, 0)]
+        (
+            (model.sublevels - int(model.communication_line))
+            * [qutip.fock(model.n_bosons + 1, 0)]
             + (
                 [qutip.fock(model.communication_line_levels, 0)]
                 if model.communication_line
                 else []
             )
-            + (n - 1) * model.sublevels * [qutip.fock(model.n_bosons + 1, 0)]
         )
+        * n,
     )
 
 
